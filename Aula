@@ -1,0 +1,39 @@
+import re
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from bs4 import BeautifulSoup as bs
+import pandas as pd
+
+url = 'https://www.all-about-photo.com/photo-events/photo-festivals.php'
+response = urlopen(url)
+html = response.read()
+soup = bs(html, "html.parser")
+
+nome = soup.find_all('div', {'class' : 'bloc-festivals-2020-title'} )
+nomes = []
+for n in nome:
+    nomes.append(n.text)
+
+
+data = soup.find_all('div', {'class' : 'bloc-festivals-2020-dates'})
+datas = []
+for d in data:
+    datas.append(d.text)
+
+
+link = soup.find_all('a', attrs={'href' : re.compile("^https://")})
+links = []
+links2 = []
+
+for l in link:
+    links.append(l.get('href'))
+for i in links:
+    if not 'all' in i:
+        links2.append(i)
+links2 = set(links2)
+
+
+a = {'Festival' : nomes, 'Data' : datas, 'Links' : links2}
+df = pd.DataFrame.from_dict(a, orient='index')
+df = df.transpose()
+print(df)
